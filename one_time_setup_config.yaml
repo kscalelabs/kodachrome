@@ -1,0 +1,30 @@
+# One-time setup configuration for this template
+# Edit the values below, then run the setup script to apply changes.
+
+# Distribution/project name (PyPI/repo name), e.g., my-package
+distribution_name: my-package
+
+# Python package import name (directory name), e.g., my_package
+import_name: my_cool_package
+
+# Short description of the package
+description: Awesome thing your package does
+
+# Project URL (e.g., repository URL)
+url: https://github.com/you/my-package
+
+# Author identity
+author: Your Name
+author_email: you@example.com
+
+# Minimum supported Python version (string)
+python_min_version: "3.11"
+
+# Initial package version (string set in <import_name>/__init__.py)
+version: "0.1.0"
+
+# Default branch for CI triggers (use "master" or "main")
+default_branch: master
+
+# Year for LICENSE
+year: 2025 
