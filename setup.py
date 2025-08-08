@@ -30,7 +30,7 @@ setup(
     version=version,
     description="K-Scale Open Deployment Automation and Control Hub for Ranking, Organization, Management and Evaluation.",
     author="alik-git",
-    author_email=\"ali@kscale\.dev\",
+    author_email="ali@kscale.dev",
     url="https://github.com/kscalelabs/kodachrome",
     long_description=long_description,
     long_description_content_type="text/markdown",
