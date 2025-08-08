@@ -1,1 +1,1 @@
-recursive-include template_package/ *.py *.txt py.typed MANIFEST.in
+recursive-include kchrome/ *.py *.txt py.typed MANIFEST.in

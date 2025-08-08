@@ -32,7 +32,7 @@ namespace_packages = false
 [tool.ruff]
 
 line-length = 120
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.format]
 
@@ -58,7 +58,7 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.isort]
 
-known-first-party = ["template_package", "tests"]
+known-first-party = ["kchrome", "tests"]
 combine-as-imports = true
 
 [tool.ruff.lint.pydocstyle]

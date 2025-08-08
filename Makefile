@@ -1,12 +1,12 @@
 # Makefile
 
 define HELP_MESSAGE
-template_package
+kodachrome
 
 # Installing
 
-1. Create a new Conda environment: `conda create --name template_package python=3.11`
-2. Activate the environment: `conda activate template_package`
+1. Create a new Conda environment: `conda create --name kodachrome python=3.11`
+2. Activate the environment: `conda activate kodachrome`
 3. Install the package: `make install-dev`
 
 # Running Tests

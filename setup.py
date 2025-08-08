@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as f:
     long_description: str = f.read()
 
 
-with open("template_package/requirements.txt", "r", encoding="utf-8") as f:
+with open("kchrome/requirements.txt", "r", encoding="utf-8") as f:
     requirements: list[str] = f.read().splitlines()
 
 requirements_dev = [
@@ -19,18 +19,19 @@ requirements_dev = [
     "ruff",
 ]
 
-with open("template_package/__init__.py", "r", encoding="utf-8") as fh:
+with open("kchrome/__init__.py", "r", encoding="utf-8") as fh:
     version_re = re.search(r"^__version__ = \"([^\"]*)\"", fh.read(), re.MULTILINE)
 assert version_re is not None, "Could not find version in template_package/__init__.py"
 version: str = version_re.group(1)
 
 
 setup(
-    name="template_package",
+    name="kodachrome",
     version=version,
-    description="Template python package",
-    author="Your Name",
-    url="https://github.com/yourname/my_package",
+    description="K-Scale Open Deployment Automation and Control Hub for Ranking, Organization, Management and Evaluation.",
+    author="alik-git",
+    author_email=\"ali@kscale\.dev\",
+    url="https://github.com/kscalelabs/kodachrome",
     long_description=long_description,
     long_description_content_type="text/markdown",
     python_requires=">=3.11",
