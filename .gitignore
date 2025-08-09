@@ -19,3 +19,8 @@ build/
 dist/
 *.so
 out*/
+
+# Environment and runtime artifacts
+.env
+policies/
+runs/

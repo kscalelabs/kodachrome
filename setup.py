@@ -28,7 +28,7 @@ version: str = version_re.group(1)
 setup(
     name="kodachrome",
     version=version,
-    description="K-Scale Open Deployment Automation and Control Hub for Ranking, Organization, Management and Evaluation.",
+    description="K-Scale Deployment and Evaluation Automation.",
     author="alik-git",
     author_email="ali@kscale.dev",
     url="https://github.com/kscalelabs/kodachrome",

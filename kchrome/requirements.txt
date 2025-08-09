@@ -1,2 +1,5 @@
-# requirements.txt
+# requirements for kodachrome runtime
+
+discord.py
+python-dotenv
 
