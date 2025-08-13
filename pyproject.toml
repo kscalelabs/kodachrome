@@ -29,6 +29,10 @@ namespace_packages = false
 # module = []
 # ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = ["kchrome.discord.names_generator"]
+ignore_missing_imports = true
+
 [tool.ruff]
 
 line-length = 120
