@@ -1,3 +1,5 @@
+"""Discord bot for running kinfer-evals on policies."""
+
 import asyncio
 import json
 import logging
@@ -48,12 +50,14 @@ intents.messages = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+
 @bot.event
-async def on_ready():
+async def on_ready() -> None:
     logger.info("Logged in as %s", bot.user)
     logger.info("Connected to servers:")
     for guild in bot.guilds:
         logger.info("- %s (ID: %s)", guild.name, guild.id)
+
 
 async def save_policy(attachment: discord.Attachment) -> str | None:
     try:
@@ -77,13 +81,12 @@ async def save_policy(attachment: discord.Attachment) -> str | None:
         return nickname
 
     except Exception as e:
-        logger.error(f"Failed to save policy: {e}")
+        logger.error("Failed to save policy: %s", e)
         traceback.print_exc()
         return None
 
-async def run_eval_subprocess(
-    kinfer_path: Path, robot: str, eval_name: str, out_dir: Path
-) -> tuple[int, str, str]:
+
+async def run_eval_subprocess(kinfer_path: Path, robot: str, eval_name: str, out_dir: Path) -> tuple[int, str, str]:
     """Run kinfer-evals via subprocess and capture stdout/stderr.
 
     Returns (returncode, stdout, stderr).
@@ -124,7 +127,9 @@ async def run_eval_subprocess(
         proc.kill()
         await proc.wait()
         return 124, "", "Timed out (EVAL_TIMEOUT_S)"
-    return proc.returncode, out_b.decode(errors="replace"), err_b.decode(errors="replace")
+    rc = await proc.wait()
+    return rc, out_b.decode(errors="replace"), err_b.decode(errors="replace")
+
 
 def extract_url(text: str) -> str | None:
     m = re.search(r"https?://\S+", text)
@@ -160,8 +165,9 @@ def _notion_url_from_summary(base_out_dir: Path, eval_name: str, kinfer_path: Pa
             continue
     return None
 
-@bot.command(name='policy')
-async def upload_file(ctx):
+
+@bot.command(name="policy")
+async def upload_file(ctx: commands.Context) -> None:
     try:
         attachments = ctx.message.attachments
         if not attachments:
@@ -181,23 +187,17 @@ async def upload_file(ctx):
         elif result.startswith("Failed to generate"):
             await ctx.reply("❌ Could not generate a unique name. Try again.")
         else:
-            await ctx.reply(
-                f"✅ Your policy has been added to the queue. Its nickname is `{result}`"
-            )
+            await ctx.reply(f"✅ Your policy has been added to the queue. Its nickname is `{result}`")
 
             # Run the eval and report back with the Notion URL when done
             async def _run_and_report(nickname: str) -> None:
                 try:
                     kinfer_path = SAVE_DIR / f"{nickname}.kinfer"
                     if not kinfer_path.exists():
-                        await ctx.reply(
-                            f"⚠️ Could not find saved file for `{nickname}` at `{kinfer_path}`"
-                        )
+                        await ctx.reply(f"⚠️ Could not find saved file for `{nickname}` at `{kinfer_path}`")
                         return
 
-                    await ctx.reply(
-                        f"▶️ Running eval `{EVAL_NAME}` on robot `{EVAL_ROBOT}` for `{nickname}`…"
-                    )
+                    await ctx.reply(f"▶️ Running eval `{EVAL_NAME}` on robot `{EVAL_ROBOT}` for `{nickname}`…")
 
                     async with EVAL_SEM:  # simple concurrency guard
                         rc, out, err = await run_eval_subprocess(kinfer_path, EVAL_ROBOT, EVAL_NAME, EVAL_OUT_DIR)
@@ -231,17 +231,17 @@ async def upload_file(ctx):
             asyncio.create_task(_run_and_report(result))
 
     except Exception as e:
-        logger.error(f"Unhandled exception: {e}")
+        logger.error("Unhandled exception: %s", e)
         traceback.print_exc()
         await ctx.send("⚠️ Something went wrong while processing your request.")
 
 
-def main():
+def main() -> None:
     if not BOT_TOKEN:
         logger.error("BOT_TOKEN is not set")
         sys.exit(1)
     bot.run(BOT_TOKEN)
 
+
 if __name__ == "__main__":
     main()
-
