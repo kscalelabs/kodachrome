@@ -30,7 +30,11 @@ namespace_packages = false
 # ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["kchrome.discord.names_generator"]
+module = [
+    "kchrome.discord.names_generator",
+    "discord",
+    "discord.*"
+]
 ignore_missing_imports = true
 
 [tool.ruff]
