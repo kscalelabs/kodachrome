@@ -26,9 +26,6 @@ ALLOWED_EXTENSIONS = {".kinfer"}  # case-insensitive check applied below
 EVAL_ROBOT = os.getenv("EVAL_ROBOT", "kbot-headless")
 EVAL_NAME = os.getenv("EVAL_NAME", "walk_forward_right")
 EVAL_OUT_DIR = Path(os.getenv("EVAL_OUT_DIR", "runs"))
-EVAL_PYTHON = os.getenv("EVAL_PYTHON", sys.executable)
-EVAL_GL = os.getenv("EVAL_GL", "egl")  # 'egl' or 'osmesa'
-EVAL_USE_SOFTWARE = os.getenv("EVAL_USE_SOFTWARE", "1")  # '1' to force llvmpipe with EGL
 
 # Optional: cap concurrent evals (1 = simple guard). 0/negatives are treated as 1.
 _conc = max(1, int(os.getenv("EVAL_MAX_CONCURRENCY", "1")))
@@ -87,14 +84,13 @@ async def save_policy(attachment: discord.Attachment) -> str | None:
 
 
 async def run_eval_subprocess(kinfer_path: Path, robot: str, eval_name: str, out_dir: Path) -> tuple[int, str, str]:
-    """Run kinfer-evals via subprocess and capture stdout/stderr.
+    """Run kinfer-evals via OSMesa CLI entry point and capture stdout/stderr.
 
     Returns (returncode, stdout, stderr).
     """
+    # Use the osmesa CLI entry point which sets up proper headless rendering environment
     cmd = [
-        EVAL_PYTHON,
-        "-m",
-        "kinfer_evals.core.eval_runner",
+        "kinfer-eval-osmesa",
         str(kinfer_path),
         robot,
         eval_name,
@@ -103,18 +99,7 @@ async def run_eval_subprocess(kinfer_path: Path, robot: str, eval_name: str, out
     ]
 
     env = os.environ.copy()
-    if EVAL_GL.lower() == "osmesa":
-        env["MUJOCO_GL"] = "osmesa"
-        # OSMesa generally needs no other vars
-    else:
-        env["MUJOCO_GL"] = "egl"
-        # Prefer surfaceless software EGL for VMs/headless
-        env.setdefault("EGL_PLATFORM", "surfaceless")
-        if EVAL_USE_SOFTWARE == "1":
-            env.setdefault("LIBGL_ALWAYS_SOFTWARE", "1")
-            env.setdefault("MESA_LOADER_DRIVER_OVERRIDE", "llvmpipe")
-
-    logger.info("Launching eval: %s", shlex.join(cmd))
+    logger.info("Launching eval with OSMesa CLI: %s", shlex.join(cmd))
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
