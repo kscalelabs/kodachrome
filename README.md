@@ -45,3 +45,61 @@ systemctl --user restart kodachrome-bot.service
 ```
 
 - Not using Notion? Leave `NOTION_API_KEY`/`NOTION_DB_ID` unset; the bot will still run.
+
+
+## Setting up systemd service
+
+You can manage the Kodachrome Discord bot using a **systemd user service**.  
+
+⚠️ **Note:** The environment variables (`.env`) must be set up before this service will run.
+
+Create the service file at:
+
+```bash
+mkdir -p ~/.config/systemd/user
+# create systemd unit file ~/.config/systemd/user/kodachrome-bot.service
+[Unit]
+Description=Kodachrome Discord bot (kinfer-evals)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+# Run from the repo so load_dotenv() sees .env
+WorkingDirectory=/home/dpsh/kodachrome
+
+# Use your conda env's Python
+ExecStart=/home/dpsh/miniconda3/envs/klog/bin/python -u kchrome/discord/bot.py
+
+# Make sure the bot's subprocess can find kinfer-eval-osmesa
+Environment=PATH=/home/dpsh/miniconda3/envs/klog/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+
+# Be resilient
+Restart=always
+RestartSec=5
+UMask=0077
+
+[Install]
+WantedBy=default.target
+EOF
+```
+
+### Managing the service
+
+```bash
+# Reload systemd to pick up the new service
+systemctl --user daemon-reload
+
+# Enable service to start on login
+systemctl --user enable kodachrome-bot.service
+
+# Start the service now
+systemctl --user start kodachrome-bot.service
+
+# Check service status
+systemctl --user status kodachrome-bot.service
+```
+
+---
+
+That’s it — the bot will now start automatically with your user session and restart if it crashes.
