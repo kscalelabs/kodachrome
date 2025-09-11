@@ -26,6 +26,8 @@ ALLOWED_EXTENSIONS = {".kinfer"}  # case-insensitive check applied below
 EVAL_ROBOT = os.getenv("EVAL_ROBOT", "kbot-headless")
 EVAL_NAME = os.getenv("EVAL_NAME", "walk_forward_right")
 EVAL_OUT_DIR = Path(os.getenv("EVAL_OUT_DIR", "runs"))
+LOCAL_MODEL_DIR = Path(os.getenv("LOCAL_MODEL_DIR", "/home/dpsh/kscale_asset_files/kbot-headless"))
+COMMAND_TYPE = os.getenv("COMMAND_TYPE", "unified")
 
 # Optional: cap concurrent evals (1 = simple guard). 0/negatives are treated as 1.
 _conc = max(1, int(os.getenv("EVAL_MAX_CONCURRENCY", "1")))
@@ -97,6 +99,11 @@ async def run_eval_subprocess(kinfer_path: Path, robot: str, eval_name: str, out
         "--out",
         str(out_dir),
     ]
+    # Thread through local model dir and command type so kinfer-evals uses the correct MJCF
+    if LOCAL_MODEL_DIR:
+        cmd += ["--local-model-dir", str(LOCAL_MODEL_DIR)]
+    if COMMAND_TYPE:
+        cmd += ["--command-type", str(COMMAND_TYPE)]
 
     env = os.environ.copy()
     logger.info("Launching eval with OSMesa CLI: %s", shlex.join(cmd))
