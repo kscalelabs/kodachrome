@@ -213,7 +213,7 @@ async def upload_file(ctx: commands.Context) -> None:
                         )
                     else:
                         await ctx.reply(
-                            f"❌ Eval failed (rc={rc}).\nstdout:\n```{out.strip()[:1500]}```\nstderr:\n```{err.strip()[:1500]}```"
+                            f"❌ Eval failed (rc={rc}).\nstdout:\n```{out.strip()[-1500:]}```\nstderr:\n```{err.strip()[-1500:]}```"
                         )
                 except Exception as exc:
                     logger.error("Eval run failed: %s", exc)
