@@ -24,10 +24,9 @@ ALLOWED_EXTENSIONS = {".kinfer"}  # case-insensitive check applied below
 
 # Eval configuration (can be overridden via environment variables)
 EVAL_ROBOT = os.getenv("EVAL_ROBOT", "kbot-headless")
-EVAL_NAME = os.getenv("EVAL_NAME", "walk_forward_right")
+MOTION_NAME = os.getenv("MOTION_NAME", "walking_and_standing_unittest")  # kmotions motion name
 EVAL_OUT_DIR = Path(os.getenv("EVAL_OUT_DIR", "runs"))
 LOCAL_MODEL_DIR = Path(os.getenv("LOCAL_MODEL_DIR", "/home/dpsh/kscale_asset_files/kbot-headless"))
-COMMAND_TYPE = os.getenv("COMMAND_TYPE", "unified")
 
 # Optional: cap concurrent evals (1 = simple guard). 0/negatives are treated as 1.
 _conc = max(1, int(os.getenv("EVAL_MAX_CONCURRENCY", "1")))
@@ -85,9 +84,12 @@ async def save_policy(attachment: discord.Attachment) -> str | None:
         return None
 
 
-async def run_eval_subprocess(kinfer_path: Path, robot: str, eval_name: str, out_dir: Path) -> tuple[int, str, str]:
+async def run_eval_subprocess(kinfer_path: Path, robot: str, motion_name: str, out_dir: Path) -> tuple[int, str, str]:
     """Run kinfer-evals via OSMesa CLI entry point and capture stdout/stderr.
 
+    Args:
+        motion_name: Motion name from kmotions (e.g., 'salute', 'wave', 'walking_and_standing_unittest')
+    
     Returns (returncode, stdout, stderr).
     """
     # Use the osmesa CLI entry point which sets up proper headless rendering environment
@@ -95,15 +97,13 @@ async def run_eval_subprocess(kinfer_path: Path, robot: str, eval_name: str, out
         "kinfer-eval-osmesa",
         str(kinfer_path),
         robot,
-        eval_name,
+        motion_name,  # Changed: now a kmotions motion name, not eval name
         "--out",
         str(out_dir),
     ]
-    # Thread through local model dir and command type so kinfer-evals uses the correct MJCF
+    # Thread through local model dir if needed
     if LOCAL_MODEL_DIR:
         cmd += ["--local-model-dir", str(LOCAL_MODEL_DIR)]
-    if COMMAND_TYPE:
-        cmd += ["--command-type", str(COMMAND_TYPE)]
 
     env = os.environ.copy()
     logger.info("Launching eval with OSMesa CLI: %s", shlex.join(cmd))
@@ -122,23 +122,22 @@ async def run_eval_subprocess(kinfer_path: Path, robot: str, eval_name: str, out
     rc = await proc.wait()
     return rc, out_b.decode(errors="replace"), err_b.decode(errors="replace")
 
-
 def extract_url(text: str) -> str | None:
     m = re.search(r"https?://\S+", text)
     return m.group(0) if m else None
 
 
-def _latest_run_dir(base_out_dir: Path, eval_name: str) -> Path | None:
-    root = base_out_dir / eval_name
+def _latest_run_dir(base_out_dir: Path, motion_name: str) -> Path | None:
+    root = base_out_dir / motion_name
     if not root.exists():
         return None
     subdirs = [d for d in root.iterdir() if d.is_dir()]
     return max(subdirs, key=lambda d: d.stat().st_mtime) if subdirs else None
 
 
-def _notion_url_from_summary(base_out_dir: Path, eval_name: str, kinfer_path: Path) -> str | None:
+def _notion_url_from_summary(base_out_dir: Path, motion_name: str, kinfer_path: Path) -> str | None:
     """Scan run_summary.json files for this kinfer path and return notion_url if present."""
-    root = base_out_dir / eval_name
+    root = base_out_dir / motion_name
     if not root.exists():
         return None
     kinfer_abs = str(kinfer_path.resolve())
@@ -189,15 +188,15 @@ async def upload_file(ctx: commands.Context) -> None:
                         await ctx.reply(f"⚠️ Could not find saved file for `{nickname}` at `{kinfer_path}`")
                         return
 
-                    await ctx.reply(f"▶️ Running eval `{EVAL_NAME}` on robot `{EVAL_ROBOT}` for `{nickname}`…")
+                    await ctx.reply(f"▶️ Running eval with motion `{MOTION_NAME}` on robot `{EVAL_ROBOT}` for `{nickname}`…")
 
                     async with EVAL_SEM:  # simple concurrency guard
-                        rc, out, err = await run_eval_subprocess(kinfer_path, EVAL_ROBOT, EVAL_NAME, EVAL_OUT_DIR)
+                        rc, out, err = await run_eval_subprocess(kinfer_path, EVAL_ROBOT, MOTION_NAME, EVAL_OUT_DIR)
 
                     # Prefer artifacts written by kinfer-evals; fallback to regex
-                    url = _notion_url_from_summary(EVAL_OUT_DIR, EVAL_NAME, kinfer_path)
+                    url = _notion_url_from_summary(EVAL_OUT_DIR, MOTION_NAME, kinfer_path)
                     if not url:
-                        latest = _latest_run_dir(EVAL_OUT_DIR, EVAL_NAME)
+                        latest = _latest_run_dir(EVAL_OUT_DIR, MOTION_NAME)
                         if latest and (latest / "notion_url.txt").exists():
                             try:
                                 url = (latest / "notion_url.txt").read_text().strip()

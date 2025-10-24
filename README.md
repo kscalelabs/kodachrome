@@ -24,7 +24,7 @@ NOTION_DB_ID=your_notion_database_id
 # --- OPTIONAL (eval behavior overrides) ---
 # Defaults shown; override only if you want different behavior.
 EVAL_ROBOT=kbot-headless
-EVAL_NAME=walk_forward_right
+MOTION_NAME=walking_and_standing_unittest   # kmotions motion name (e.g., 'salute', 'wave', 'walking_and_standing_unittest')
 EVAL_OUT_DIR=runs
 EVAL_MAX_CONCURRENCY=1       # how many evals to run in parallel
 EVAL_TIMEOUT_S=1800          # kill evals that exceed this many seconds
